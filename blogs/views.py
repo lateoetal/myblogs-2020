@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from .models import Blog, Entry
@@ -23,7 +23,7 @@ def blogs(request):
 @login_required
 def blog(request, blog_id):
     """Show individual blog page."""
-    blog = Blog.objects.get(id=blog_id)
+    blog = get_object_or_404(id=blog_id)
     check_blog_owner(blog, request)
 
     entries = blog.entry_set.order_by('date_added')
@@ -52,7 +52,7 @@ def new_blog(request):
 @login_required
 def new_entry(request, blog_id):
     """Add a new entry for a particular blog."""
-    blog = Blog.objects.get(id=blog_id)
+    blog = get_object_or_404(id=blog_id)
     check_blog_owner(blog, request)
 
     if request.method != 'POST':
@@ -74,7 +74,7 @@ def new_entry(request, blog_id):
 @login_required
 def edit_entry(request, entry_id):
     """Edit an existing entry."""
-    entry = Entry.objects.get(id=entry_id)
+    entry = get_object_or_404(id=entry_id)
     blog = entry.blog
     check_blog_owner(blog, request)
 
