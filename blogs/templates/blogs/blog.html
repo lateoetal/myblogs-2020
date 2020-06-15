@@ -5,9 +5,13 @@
 {% endblock page_header %}
 
 {% block content %}
-    <p>
-        <a href="{% url 'blogs:new_entry' blog.id %}">Add a new entry</a>
-    </p>
+    {% if blog.owner == request.user %}
+        <p>
+            <a href="{% url 'blogs:new_entry' blog.id %}">Add a new entry</a>
+        </p>
+    {% else %}
+        <p>You aren't allowed to add entries for blogs you don't own.</p>
+    {% endif %}
 
     {% for entry in entries %}
         <div class="card mb-3">

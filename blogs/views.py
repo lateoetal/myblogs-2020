@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
+from django.db.models import Q
 from .models import Blog, Entry
 from .forms import BlogForm, EntryForm
 
@@ -16,19 +17,23 @@ def check_blog_owner(blog, request):
 @login_required
 def blogs(request):
     """Show blog list."""
-    blogs = Blog.objects.filter(owner=request.user).order_by('date_added')
+    blogs = Blog.objects.filter(Q(owner=request.user) | Q(public=True)).order_by('date_added')
     context = {'blogs': blogs}
     return render(request, 'blogs/blogs.html', context)
 
 @login_required
 def blog(request, blog_id):
     """Show individual blog page."""
-    blog = get_object_or_404(id=blog_id)
-    check_blog_owner(blog, request)
-
+    blog = get_object_or_404(Blog, id=blog_id)
     entries = blog.entry_set.order_by('date_added')
     context = {'blog': blog, 'entries': entries}
-    return render(request, 'blogs/blog.html', context)
+    if blog.owner != request.user:
+        if blog.public == True:
+            return render(request, 'blogs/blog.html', context)
+        else:
+            raise Http404
+    else:
+        return render(request, 'blogs/blog.html', context)
 
 @login_required
 def new_blog(request):
@@ -52,7 +57,7 @@ def new_blog(request):
 @login_required
 def new_entry(request, blog_id):
     """Add a new entry for a particular blog."""
-    blog = get_object_or_404(id=blog_id)
+    blog = get_object_or_404(Blog, id=blog_id)
     check_blog_owner(blog, request)
 
     if request.method != 'POST':
@@ -74,7 +79,7 @@ def new_entry(request, blog_id):
 @login_required
 def edit_entry(request, entry_id):
     """Edit an existing entry."""
-    entry = get_object_or_404(id=entry_id)
+    entry = get_object_or_404(Entry, id=entry_id)
     blog = entry.blog
     check_blog_owner(blog, request)
 
